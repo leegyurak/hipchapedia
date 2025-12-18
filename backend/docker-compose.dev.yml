@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: hipchapedia_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: hipchapedia
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: hipchapedia_user
+      MYSQL_PASSWORD: hipchapedia_password
+    ports:
+      - "23306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql 
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hipchapedia_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+    driver: local
