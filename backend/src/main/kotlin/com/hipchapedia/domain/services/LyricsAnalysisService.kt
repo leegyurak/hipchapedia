@@ -53,7 +53,7 @@ class LyricsAnalysisService(
             lyricsId = id
         } else {
             // 가사가 없으면 새로 저장
-            lyricsId = lyricsRepository.save(title, lyricsHash)
+            lyricsId = lyricsRepository.save(title, lyricsHash, lyrics)
         }
 
         // 엔티티 생성

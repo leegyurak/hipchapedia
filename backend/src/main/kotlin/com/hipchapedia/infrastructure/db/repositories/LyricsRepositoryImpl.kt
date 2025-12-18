@@ -33,9 +33,10 @@ class LyricsRepositoryImpl(
     override suspend fun save(
         title: String,
         lyricsHash: String,
+        originalLyrics: String,
     ): Long =
         withContext(Dispatchers.IO) {
-            val entity = LyricsEntity(title = title, lyricsHash = lyricsHash)
+            val entity = LyricsEntity(title = title, lyricsHash = lyricsHash, originalLyrics = originalLyrics)
             lyricsJpaRepository.save(entity).id!!
         }
 

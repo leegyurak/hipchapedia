@@ -44,18 +44,7 @@ export default function AnalyzePage() {
               )}
             </div>
           ) : (
-            <div>
-              <div className="mb-8 text-center">
-                <button
-                  onClick={reset}
-                  className="px-6 py-3 rounded-md border border-[#333] text-white font-semibold hover:border-[#ff2e2e] hover:text-[#ff2e2e] transition-all"
-                >
-                  ← 다른 곡 분석하기
-                </button>
-              </div>
-
-              <AnalysisResult analysis={analysis} />
-            </div>
+            <AnalysisResult analysis={analysis} onReset={reset} />
           )}
         </div>
       </main>

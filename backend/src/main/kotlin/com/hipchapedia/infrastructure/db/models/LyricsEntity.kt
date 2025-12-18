@@ -27,6 +27,8 @@ class LyricsEntity(
     var title: String,
     @Column(name = "lyrics_hash", nullable = false, unique = true, length = 64)
     val lyricsHash: String,
+    @Column(name = "original_lyrics", nullable = false, columnDefinition = "TEXT")
+    val originalLyrics: String,
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,

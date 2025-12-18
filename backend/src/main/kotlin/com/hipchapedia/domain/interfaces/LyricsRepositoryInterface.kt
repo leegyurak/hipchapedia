@@ -25,11 +25,13 @@ interface LyricsRepositoryInterface {
      *
      * @param title 곡 제목
      * @param lyricsHash 가사 해시
+     * @param originalLyrics 원본 가사 내용
      * @return 저장된 가사 ID
      */
     suspend fun save(
         title: String,
         lyricsHash: String,
+        originalLyrics: String,
     ): Long
 
     /**
