@@ -24,7 +24,7 @@ class LyricsAnalysisServiceTest {
             val analysisResult = "# Analysis Result\n\nTest analysis"
 
             coEvery { lyricsRepository.getByHash(any()) } returns null
-            coEvery { lyricsRepository.save(any(), any()) } returns 1L
+            coEvery { lyricsRepository.save(any(), any(), any()) } returns 1L
             coEvery { aiService.analyzeLyrics(title, lyrics) } returns analysisResult
             coEvery { lyricsRepository.saveAnalysisResult(any(), any()) } returns Unit
 
@@ -37,7 +37,7 @@ class LyricsAnalysisServiceTest {
             assertEquals(lyrics, result.lyrics)
             assertEquals(analysisResult, result.analysisResult)
 
-            coVerify { lyricsRepository.save(title, any()) }
+            coVerify { lyricsRepository.save(title, any(), lyrics) }
             coVerify { aiService.analyzeLyrics(title, lyrics) }
             coVerify { lyricsRepository.saveAnalysisResult(1L, analysisResult) }
         }
@@ -89,6 +89,6 @@ class LyricsAnalysisServiceTest {
 
             coVerify { aiService.analyzeLyrics(title, lyrics) }
             coVerify { lyricsRepository.saveAnalysisResult(existingId, analysisResult) }
-            coVerify(exactly = 0) { lyricsRepository.save(any(), any()) }
+            coVerify(exactly = 0) { lyricsRepository.save(any(), any(), any()) }
         }
 }

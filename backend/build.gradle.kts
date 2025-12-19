@@ -92,7 +92,10 @@ tasks.named("check") {
 
 // Flyway 설정
 flyway {
-    url = System.getenv("DB_URL") ?: "jdbc:mysql://localhost:3306/hipchapedia?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+    url =
+        System.getenv("DB_URL")
+            ?: "jdbc:mysql://localhost:3306/hipchapedia?" +
+            "useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
     user = System.getenv("DB_USER") ?: "root"
     password = System.getenv("DB_PASSWORD") ?: "password"
     locations = arrayOf("classpath:db/migration")

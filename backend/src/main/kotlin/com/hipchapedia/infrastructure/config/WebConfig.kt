@@ -33,7 +33,7 @@ class DevWebConfig : WebMvcConfigurer {
 @Configuration
 @Profile("prod")
 class ProdWebConfig(
-    @Value("\${cors.allowed-origins:}") private val allowedOrigins: String
+    @Value("\${cors.allowed-origins:}") private val allowedOrigins: String,
 ) : WebMvcConfigurer {
     override fun addCorsMappings(registry: CorsRegistry) {
         val origins = allowedOrigins.split(",").map { it.trim() }.filter { it.isNotEmpty() }
