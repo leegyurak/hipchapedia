@@ -55,7 +55,7 @@ class ClaudeService(
                     .createObjectNode()
                     .apply {
                         put("model", anthropicConfig.model)
-                        put("max_tokens", 4096)
+                        put("max_tokens", 8192)
                         put("system", systemPrompt)
                         putArray("messages").apply {
                             addObject().apply {
