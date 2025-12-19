@@ -58,3 +58,9 @@ logging:
     com.hipchapedia: DEBUG
     org.hibernate.SQL: ${SQL_LOG_LEVEL:INFO}
     org.hibernate.type.descriptor.sql.BasicBinder: ${SQL_LOG_LEVEL:INFO}
+
+# CORS 설정 (prod 프로파일에서 사용)
+# 여러 origin을 허용하려면 쉼표로 구분
+# 예: CORS_ALLOWED_ORIGINS=https://example.com,https://www.example.com
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:}
