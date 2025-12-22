@@ -1,0 +1,86 @@
+name: Fetcher Code Quality Check
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'fetcher/**'
+      - '.github/workflows/fetcher-check.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'fetcher/**'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache uv packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        working-directory: ./fetcher
+        run: uv sync --all-groups
+
+      - name: Run Ruff format check
+        working-directory: ./fetcher
+        run: uv run ruff format --check .
+
+      - name: Run Ruff lint
+        working-directory: ./fetcher
+        run: uv run ruff check .
+
+      - name: Run mypy type check
+        working-directory: ./fetcher
+        run: uv run mypy src --strict --ignore-missing-imports
+
+      - name: Run tests
+        working-directory: ./fetcher
+        env:
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: uv run pytest -v --cov=src --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./fetcher/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Cleanup uv Cache
+        run: |
+          rm -rf ~/.cache/uv/archive-*
+          rm -rf ~/.cache/uv/built-wheels-*
