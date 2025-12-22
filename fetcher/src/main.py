@@ -49,6 +49,7 @@ def create_service(config: Config) -> LyricsFetcherService:
         host=config.redis_host,
         port=config.redis_port,
         db=config.redis_db,
+        password=config.redis_password,
         request_channel=config.redis_request_channel,
         result_channel=config.redis_result_channel,
     )

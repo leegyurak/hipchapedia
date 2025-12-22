@@ -23,6 +23,7 @@ class RedisMessageRepository(MessageRepository):
         host: str = "localhost",
         port: int = 6379,
         db: int = 0,
+        password: str | None = None,
         request_channel: str = "lyrics:requests",
         result_channel: str = "lyrics:results",
     ) -> None:
@@ -33,12 +34,14 @@ class RedisMessageRepository(MessageRepository):
             host: Redis host
             port: Redis port
             db: Redis database number
+            password: Redis password (optional)
             request_channel: Channel for incoming search requests
             result_channel: Channel for publishing results
         """
         self.host = host
         self.port = port
         self.db = db
+        self.password = password
         self.request_channel = request_channel
         self.result_channel = result_channel
         self.client: redis.Redis | None = None
@@ -51,6 +54,7 @@ class RedisMessageRepository(MessageRepository):
                 host=self.host,
                 port=self.port,
                 db=self.db,
+                password=self.password,
                 decode_responses=True,
             )
             ping_result = self.client.ping()

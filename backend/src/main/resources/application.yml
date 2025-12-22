@@ -38,11 +38,6 @@ spring:
     async:
       request-timeout: 300000  # 5분 (밀리초)
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
 redis:
   channel:
     request: ${REDIS_REQUEST_CHANNEL:lyrics:requests}

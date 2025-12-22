@@ -17,6 +17,7 @@ class Config:
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
+    redis_password: str | None = None
     redis_request_channel: str = "lyrics:requests"
     redis_result_channel: str = "lyrics:results"
 
@@ -39,6 +40,7 @@ class Config:
             redis_host=os.getenv("REDIS_HOST", "localhost"),
             redis_port=int(os.getenv("REDIS_PORT", "6379")),
             redis_db=int(os.getenv("REDIS_DB", "0")),
+            redis_password=os.getenv("REDIS_PASSWORD"),
             redis_request_channel=os.getenv("REDIS_REQUEST_CHANNEL", "lyrics:requests"),
             redis_result_channel=os.getenv("REDIS_RESULT_CHANNEL", "lyrics:results"),
             log_level=os.getenv("LOG_LEVEL", "INFO"),

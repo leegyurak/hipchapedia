@@ -18,11 +18,17 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
  */
 @Configuration
 class RedisConfig {
-    @Value("\${spring.data.redis.host:localhost}")
+    @Value("\${REDIS_HOST:localhost}")
     private lateinit var redisHost: String
 
-    @Value("\${spring.data.redis.port:6379}")
+    @Value("\${REDIS_PORT:6379}")
     private var redisPort: Int = 6379
+
+    @Value("\${REDIS_DB:0}")
+    private var redisDb: Int = 0
+
+    @Value("\${REDIS_PASSWORD:#{null}}")
+    private var redisPassword: String? = null
 
     @Value("\${redis.channel.result:lyrics:results}")
     private lateinit var resultChannel: String
@@ -32,6 +38,8 @@ class RedisConfig {
         val redisConfiguration = RedisStandaloneConfiguration()
         redisConfiguration.hostName = redisHost
         redisConfiguration.port = redisPort
+        redisConfiguration.database = redisDb
+        redisPassword?.let { redisConfiguration.setPassword(it) }
         return LettuceConnectionFactory(redisConfiguration)
     }
 
