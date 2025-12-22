@@ -23,7 +23,9 @@ class MessageRepository(ABC):
         ...
 
     @abstractmethod
-    async def publish_result(self, song: Song, original_request: SearchRequest | None = None) -> None:
+    async def publish_result(
+        self, song: Song, original_request: SearchRequest | None = None
+    ) -> None:
         """
         Publish song result.
 

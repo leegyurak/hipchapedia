@@ -109,7 +109,9 @@ class TestLyricsFetcherService:
     ) -> None:
         """Test that service maintains original request info when publishing."""
         # Arrange
-        original_request = SearchRequest(title="original title", artist="original artist")
+        original_request = SearchRequest(
+            title="original title", artist="original artist"
+        )
 
         # Song from Genius API has different title/artist
         found_song = Song(
