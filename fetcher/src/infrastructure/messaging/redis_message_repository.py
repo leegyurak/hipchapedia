@@ -55,7 +55,7 @@ class RedisMessageRepository(MessageRepository):
             )
             ping_result = self.client.ping()
             if hasattr(ping_result, "__await__"):
-                await ping_result  # type: ignore[misc]
+                await ping_result
             logger.info(f"Connected to Redis at {self.host}:{self.port}")
 
             self.pubsub = self.client.pubsub()
