@@ -118,12 +118,15 @@ class RedisMessageRepository(MessageRepository):
             logger.error(f"Error in subscribe_requests: {e}", exc_info=True)
             raise
 
-    async def publish_result(self, song: Song) -> None:
+    async def publish_result(
+        self, song: Song, original_request: SearchRequest | None = None
+    ) -> None:
         """
         Publish song result to Redis.
 
         Args:
             song: Song entity to publish
+            original_request: Original search request to maintain key consistency
         """
         if not self.client:
             raise RuntimeError("Not connected to Redis. Call connect() first.")
@@ -138,10 +141,21 @@ class RedisMessageRepository(MessageRepository):
                 "release_date": song.release_date,
             }
 
+            # Add original request info for key matching
+            if original_request:
+                result["request_title"] = original_request.title
+                result["request_artist"] = original_request.artist
+
             message = json.dumps(result, ensure_ascii=False)
             await self.client.publish(self.result_channel, message)
 
-            logger.info(f"Published result for: {song.title} by {song.artist}")
+            if original_request:
+                logger.info(
+                    f"Published result for request: {original_request.title} by {original_request.artist} "
+                    f"(found: {song.title} by {song.artist})"
+                )
+            else:
+                logger.info(f"Published result for: {song.title} by {song.artist}")
 
         except Exception as e:
             logger.error(f"Error publishing result: {e}", exc_info=True)

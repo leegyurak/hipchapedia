@@ -1,16 +1,16 @@
-package com.hipchapedia.domain.services
+package com.hipchapedia.application.usecases
 
 import com.hipchapedia.domain.entities.LyricsAnalysis
 import com.hipchapedia.domain.interfaces.AIServiceInterface
 import com.hipchapedia.domain.interfaces.LyricsRepositoryInterface
 import com.hipchapedia.domain.utils.generateLyricsHash
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
 /**
- * 가사 분석 서비스
+ * 가사 분석 Use Case
  */
-@Service
-class LyricsAnalysisService(
+@Component
+class AnalyzeLyricsUseCase(
     private val aiService: AIServiceInterface,
     private val lyricsRepository: LyricsRepositoryInterface,
 ) {
@@ -23,7 +23,7 @@ class LyricsAnalysisService(
      * @param lyrics 가사 내용
      * @return 분석 결과가 포함된 LyricsAnalysis 엔티티
      */
-    suspend fun analyze(
+    suspend fun execute(
         title: String,
         lyrics: String,
     ): LyricsAnalysis {

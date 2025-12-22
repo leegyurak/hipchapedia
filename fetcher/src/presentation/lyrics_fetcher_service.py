@@ -50,8 +50,8 @@ class LyricsFetcherService:
                 song = await self.search_lyrics_use_case.execute(request)
 
                 if song:
-                    # Publish result
-                    await self.message_repository.publish_result(song)
+                    # Publish result with original request info
+                    await self.message_repository.publish_result(song, request)
                     logger.info(f"Successfully processed: {song.title}")
                 else:
                     logger.warning(

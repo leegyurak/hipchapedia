@@ -20,3 +20,15 @@ data class LyricsAnalysisResponseDTO(
     val lyrics: String,
     val analysisResult: String,
 )
+
+/**
+ * 가사 검색 응답 DTO
+ */
+data class LyricsSearchResponseDTO(
+    val title: String,
+    val artist: String,
+    val lyrics: String?,
+    val url: String?,
+    val album: String?,
+    val releaseDate: String?,
+)

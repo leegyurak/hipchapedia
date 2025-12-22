@@ -1,4 +1,4 @@
-package com.hipchapedia.domain.services
+package com.hipchapedia.application.usecases
 
 import com.hipchapedia.domain.interfaces.AIServiceInterface
 import com.hipchapedia.domain.interfaces.LyricsRepositoryInterface
@@ -10,10 +10,10 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-class LyricsAnalysisServiceTest {
+class AnalyzeLyricsUseCaseTest {
     private val aiService: AIServiceInterface = mockk()
     private val lyricsRepository: LyricsRepositoryInterface = mockk()
-    private val service = LyricsAnalysisService(aiService, lyricsRepository)
+    private val useCase = AnalyzeLyricsUseCase(aiService, lyricsRepository)
 
     @Test
     fun `새로운 가사를 분석하고 저장해야 한다`() =
@@ -29,7 +29,7 @@ class LyricsAnalysisServiceTest {
             coEvery { lyricsRepository.saveAnalysisResult(any(), any()) } returns Unit
 
             // when
-            val result = service.analyze(title, lyrics)
+            val result = useCase.execute(title, lyrics)
 
             // then
             assertNotNull(result)
@@ -55,7 +55,7 @@ class LyricsAnalysisServiceTest {
             coEvery { lyricsRepository.getAnalysisResultByLyricsId(existingId) } returns cachedResult
 
             // when
-            val result = service.analyze(title, lyrics)
+            val result = useCase.execute(title, lyrics)
 
             // then
             assertNotNull(result)
@@ -81,7 +81,7 @@ class LyricsAnalysisServiceTest {
             coEvery { lyricsRepository.saveAnalysisResult(any(), any()) } returns Unit
 
             // when
-            val result = service.analyze(title, lyrics)
+            val result = useCase.execute(title, lyrics)
 
             // then
             assertNotNull(result)

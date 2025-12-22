@@ -103,6 +103,56 @@ class TestRedisMessageRepository:
                 assert data["artist"] == "Test Artist"
                 assert data["lyrics"] == "Test lyrics"
                 assert data["url"] == "https://genius.com/test"
+                # Should not have request fields when original_request is not provided
+                assert "request_title" not in data
+                assert "request_artist" not in data
+                received = True
+                break
+
+        await pubsub.close()
+        assert received
+
+    async def test_publish_result_with_original_request(
+        self, repository: RedisMessageRepository, redis_client: redis.Redis
+    ) -> None:
+        """Test publishing a song result with original request info."""
+        # Subscribe to the result channel
+        pubsub = redis_client.pubsub()
+        await pubsub.subscribe("test:results")
+
+        # Skip subscription message
+        async for message in pubsub.listen():
+            if message["type"] == "subscribe":
+                break
+
+        # Create original request and song with different values
+        original_request = SearchRequest(
+            title="original title",
+            artist="original artist",
+        )
+
+        song = Song(
+            title="Actual Song Title",
+            artist="Actual Artist Name",
+            lyrics="Test lyrics",
+            url="https://genius.com/test",
+        )
+
+        await repository.publish_result(song, original_request)
+
+        # Receive the message
+        received = False
+        async for message in pubsub.listen():
+            if message["type"] == "message":
+                data = json.loads(message["data"])
+                # Song data should be from Genius API
+                assert data["title"] == "Actual Song Title"
+                assert data["artist"] == "Actual Artist Name"
+                assert data["lyrics"] == "Test lyrics"
+                assert data["url"] == "https://genius.com/test"
+                # Request info should be from original request
+                assert data["request_title"] == "original title"
+                assert data["request_artist"] == "original artist"
                 received = True
                 break
 

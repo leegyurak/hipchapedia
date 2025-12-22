@@ -46,6 +46,10 @@ dependencies {
     // HTTP Client for Claude API
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
+    // Redis
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("io.lettuce:lettuce-core")
+
     // Configuration
     implementation("org.springframework.boot:spring-boot-configuration-processor")
 
@@ -83,6 +87,11 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(21))
+        },
+    )
 }
 
 // ktlint 체크를 빌드 프로세스에 통합
