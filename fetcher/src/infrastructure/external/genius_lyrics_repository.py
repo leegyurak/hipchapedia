@@ -39,7 +39,7 @@ class GeniusLyricsRepository(LyricsRepository):
             Song entity if found, None otherwise
         """
         try:
-            query = f"{title} - {artist}"
+            query = f"{artist} - {title}"
             logger.debug(f"Searching Genius for: {query}")
 
             # lyricsgenius is synchronous, but we wrap it in async interface

@@ -1,5 +1,5 @@
 import { ILyricsRepository } from '@/core/interfaces/ILyricsRepository';
-import { LyricsAnalysisRequest, LyricsAnalysisResponse } from '@/shared/types/lyrics';
+import { LyricsAnalysisRequest, LyricsAnalysisResponse, LyricsSearchRequest, LyricsSearchResponse } from '@/shared/types/lyrics';
 
 export class LyricsApiRepository implements ILyricsRepository {
   private baseUrl: string;
@@ -61,6 +61,32 @@ export class LyricsApiRepository implements ILyricsRepository {
     } catch (error) {
       if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error('백엔드 서버에 연결할 수 없습니다.');
+      }
+      throw error;
+    }
+  }
+
+  async searchLyrics(request: LyricsSearchRequest): Promise<LyricsSearchResponse | null> {
+    try {
+      const params = new URLSearchParams({
+        title: request.title,
+        artist: request.artist,
+      });
+
+      const response = await fetch(`${this.baseUrl}/api/lyrics/search?${params}`);
+
+      if (response.status === 404) {
+        return null;
+      }
+
+      if (!response.ok) {
+        throw new Error(`검색에 실패했습니다: ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
       }
       throw error;
     }

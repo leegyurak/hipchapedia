@@ -2,17 +2,8 @@ name: Docker Build and Push
 
 on:
   push:
-    branches: [main]
-    paths:
-      - 'fetcher/**'
-      - '.github/workflows/docker-build.yml'
     tags:
       - 'v*'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'fetcher/**'
-      - '.github/workflows/docker-build.yml'
 
 env:
   REGISTRY: ghcr.io
