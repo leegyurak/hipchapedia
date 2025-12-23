@@ -21,11 +21,13 @@ class AnalyzeLyricsUseCase(
      *
      * @param title 곡 제목
      * @param lyrics 가사 내용
+     * @param genre 장르
      * @return 분석 결과가 포함된 LyricsAnalysis 엔티티
      */
     suspend fun execute(
         title: String,
         lyrics: String,
+        genre: com.hipchapedia.domain.entities.Genre,
     ): LyricsAnalysis {
         // 가사 해시 생성
         val lyricsHash = generateLyricsHash(lyrics)
@@ -36,7 +38,7 @@ class AnalyzeLyricsUseCase(
         val lyricsId: Long
         if (existingLyrics != null) {
             // 기존 가사가 있으면 분석 결과 조회
-            val (id, existingTitle) = existingLyrics
+            val (id, existingTitle, existingGenre) = existingLyrics
             val cachedResult = lyricsRepository.getAnalysisResultByLyricsId(id)
 
             if (cachedResult != null) {
@@ -44,6 +46,7 @@ class AnalyzeLyricsUseCase(
                 return LyricsAnalysis(
                     title = existingTitle,
                     lyrics = lyrics,
+                    genre = existingGenre,
                     analysisResult = cachedResult,
                     id = id,
                 )
@@ -53,14 +56,14 @@ class AnalyzeLyricsUseCase(
             lyricsId = id
         } else {
             // 가사가 없으면 새로 저장
-            lyricsId = lyricsRepository.save(title, lyricsHash, lyrics)
+            lyricsId = lyricsRepository.save(title, lyricsHash, lyrics, genre)
         }
 
         // 엔티티 생성
-        var analysis = LyricsAnalysis(title = title, lyrics = lyrics).withId(lyricsId)
+        var analysis = LyricsAnalysis(title = title, lyrics = lyrics, genre = genre).withId(lyricsId)
 
-        // AI 서비스를 통한 분석
-        val analysisResult = aiService.analyzeLyrics(title, lyrics)
+        // AI 서비스를 통한 분석 (장르별 프롬프트 적용)
+        val analysisResult = aiService.analyzeLyrics(title, lyrics, genre)
         analysis = analysis.withAnalysisResult(analysisResult)
 
         // 분석 결과 DB에 저장

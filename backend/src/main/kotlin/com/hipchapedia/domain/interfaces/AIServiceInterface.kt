@@ -1,5 +1,7 @@
 package com.hipchapedia.domain.interfaces
 
+import com.hipchapedia.domain.entities.Genre
+
 /**
  * AI 분석 서비스 인터페이스
  */
@@ -9,10 +11,12 @@ interface AIServiceInterface {
      *
      * @param title 곡 제목
      * @param lyrics 가사 내용
+     * @param genre 장르
      * @return 분석 결과 (Markdown 형식)
      */
     suspend fun analyzeLyrics(
         title: String,
         lyrics: String,
+        genre: Genre,
     ): String
 }

@@ -1,5 +1,6 @@
 package com.hipchapedia.infrastructure.db.repositories
 
+import com.hipchapedia.domain.entities.Genre
 import com.hipchapedia.infrastructure.db.models.LyricsAnalysisResultEntity
 import com.hipchapedia.infrastructure.db.models.LyricsEntity
 import io.mockk.every
@@ -29,6 +30,7 @@ class LyricsRepositoryImplTest {
                     title = "Test Song",
                     lyricsHash = lyricsHash,
                     originalLyrics = "Test lyrics",
+                    genre = Genre.HIPHOP,
                 )
 
             every { lyricsJpaRepository.findByLyricsHash(lyricsHash) } returns entity
@@ -40,6 +42,7 @@ class LyricsRepositoryImplTest {
             assertNotNull(result)
             assertEquals(1L, result.first)
             assertEquals("Test Song", result.second)
+            assertEquals(Genre.HIPHOP, result.third)
         }
 
     @Test
@@ -101,6 +104,7 @@ class LyricsRepositoryImplTest {
             val title = "Test Song"
             val lyricsHash = "test-hash"
             val originalLyrics = "Test lyrics content"
+            val genre = Genre.HIPHOP
 
             val savedEntity =
                 LyricsEntity(
@@ -108,16 +112,47 @@ class LyricsRepositoryImplTest {
                     title = title,
                     lyricsHash = lyricsHash,
                     originalLyrics = originalLyrics,
+                    genre = genre,
                 )
 
             every { lyricsJpaRepository.save(any<LyricsEntity>()) } returns savedEntity
 
             // when
-            val result = repository.save(title, lyricsHash, originalLyrics)
+            val result = repository.save(title, lyricsHash, originalLyrics, genre)
 
             // then
             assertEquals(1L, result)
             verify { lyricsJpaRepository.save(any<LyricsEntity>()) }
+        }
+
+    @Test
+    fun `모든 장르 타입으로 가사를 저장할 수 있어야 한다`() =
+        runTest {
+            // given
+            val genres = listOf(Genre.HIPHOP, Genre.RNB, Genre.KPOP, Genre.JPOP, Genre.BAND)
+
+            genres.forEach { genre ->
+                val title = "Test Song - $genre"
+                val lyricsHash = "test-hash-$genre"
+                val originalLyrics = "Test lyrics for $genre"
+
+                val savedEntity =
+                    LyricsEntity(
+                        id = 1L,
+                        title = title,
+                        lyricsHash = lyricsHash,
+                        originalLyrics = originalLyrics,
+                        genre = genre,
+                    )
+
+                every { lyricsJpaRepository.save(any<LyricsEntity>()) } returns savedEntity
+
+                // when
+                val result = repository.save(title, lyricsHash, originalLyrics, genre)
+
+                // then
+                assertEquals(1L, result)
+            }
         }
 
     @Test

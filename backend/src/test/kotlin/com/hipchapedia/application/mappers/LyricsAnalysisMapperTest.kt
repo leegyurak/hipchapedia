@@ -1,5 +1,6 @@
 package com.hipchapedia.application.mappers
 
+import com.hipchapedia.domain.entities.Genre
 import com.hipchapedia.domain.entities.LyricsAnalysis
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -13,6 +14,7 @@ class LyricsAnalysisMapperTest {
             LyricsAnalysis(
                 title = "Test Song",
                 lyrics = "Test lyrics content",
+                genre = Genre.HIPHOP,
                 analysisResult = "# Analysis Result\n\nTest analysis",
                 id = 1L,
             )
@@ -23,6 +25,7 @@ class LyricsAnalysisMapperTest {
         // then
         assertEquals("Test Song", dto.title)
         assertEquals("Test lyrics content", dto.lyrics)
+        assertEquals(Genre.HIPHOP, dto.genre)
         assertEquals("# Analysis Result\n\nTest analysis", dto.analysisResult)
     }
 
@@ -33,6 +36,7 @@ class LyricsAnalysisMapperTest {
             LyricsAnalysis(
                 title = "Test Song",
                 lyrics = "Test lyrics content",
+                genre = Genre.RNB,
                 analysisResult = null,
                 id = 1L,
             )
@@ -52,6 +56,7 @@ class LyricsAnalysisMapperTest {
             LyricsAnalysis(
                 title = "Test Song",
                 lyrics = "Test lyrics",
+                genre = Genre.KPOP,
                 analysisResult = "",
                 id = 1L,
             )
@@ -61,6 +66,7 @@ class LyricsAnalysisMapperTest {
 
         // then
         assertEquals("", dto.analysisResult)
+        assertEquals(Genre.KPOP, dto.genre)
     }
 
     @Test
@@ -71,6 +77,7 @@ class LyricsAnalysisMapperTest {
             LyricsAnalysis(
                 title = "Test Song",
                 lyrics = "Test lyrics",
+                genre = Genre.JPOP,
                 analysisResult = longAnalysis,
                 id = 1L,
             )
@@ -80,5 +87,29 @@ class LyricsAnalysisMapperTest {
 
         // then
         assertEquals(longAnalysis, dto.analysisResult)
+        assertEquals(Genre.JPOP, dto.genre)
+    }
+
+    @Test
+    fun `모든 장르 타입에 대해 정상적으로 변환해야 한다`() {
+        // given
+        val genres = listOf(Genre.HIPHOP, Genre.RNB, Genre.KPOP, Genre.JPOP, Genre.BAND)
+
+        genres.forEach { genre ->
+            val entity =
+                LyricsAnalysis(
+                    title = "Test Song",
+                    lyrics = "Test lyrics",
+                    genre = genre,
+                    analysisResult = "# Analysis",
+                    id = 1L,
+                )
+
+            // when
+            val dto = LyricsAnalysisMapper.toResponseDTO(entity)
+
+            // then
+            assertEquals(genre, dto.genre)
+        }
     }
 }

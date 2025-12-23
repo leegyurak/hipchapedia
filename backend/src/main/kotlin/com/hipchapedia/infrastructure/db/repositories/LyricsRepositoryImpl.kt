@@ -1,5 +1,6 @@
 package com.hipchapedia.infrastructure.db.repositories
 
+import com.hipchapedia.domain.entities.Genre
 import com.hipchapedia.domain.interfaces.LyricsRepositoryInterface
 import com.hipchapedia.infrastructure.db.models.LyricsAnalysisResultEntity
 import com.hipchapedia.infrastructure.db.models.LyricsEntity
@@ -15,10 +16,10 @@ class LyricsRepositoryImpl(
     private val lyricsJpaRepository: LyricsJpaRepository,
     private val lyricsAnalysisResultJpaRepository: LyricsAnalysisResultJpaRepository,
 ) : LyricsRepositoryInterface {
-    override suspend fun getByHash(lyricsHash: String): Pair<Long, String>? =
+    override suspend fun getByHash(lyricsHash: String): Triple<Long, String, Genre>? =
         withContext(Dispatchers.IO) {
             lyricsJpaRepository.findByLyricsHash(lyricsHash)?.let {
-                it.id!! to it.title
+                Triple(it.id!!, it.title, it.genre)
             }
         }
 
@@ -34,9 +35,16 @@ class LyricsRepositoryImpl(
         title: String,
         lyricsHash: String,
         originalLyrics: String,
+        genre: Genre,
     ): Long =
         withContext(Dispatchers.IO) {
-            val entity = LyricsEntity(title = title, lyricsHash = lyricsHash, originalLyrics = originalLyrics)
+            val entity =
+                LyricsEntity(
+                    title = title,
+                    lyricsHash = lyricsHash,
+                    originalLyrics = originalLyrics,
+                    genre = genre,
+                )
             lyricsJpaRepository.save(entity).id!!
         }
 

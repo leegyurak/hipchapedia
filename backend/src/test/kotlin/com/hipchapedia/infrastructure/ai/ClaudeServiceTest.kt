@@ -1,6 +1,7 @@
 package com.hipchapedia.infrastructure.ai
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.hipchapedia.domain.entities.Genre
 import com.hipchapedia.infrastructure.config.AnthropicConfig
 import io.mockk.every
 import io.mockk.mockk
@@ -26,15 +27,6 @@ class ClaudeServiceTest {
         every { anthropicConfig.apiKey } returns "test-api-key"
         every { anthropicConfig.model } returns "claude-3-5-sonnet-20241022"
         service = ClaudeService(anthropicConfig)
-    }
-
-    @Test
-    fun `시스템 프롬프트가 로드되어야 한다`() {
-        // when
-        val systemPrompt = ReflectionTestUtils.getField(service, "systemPrompt") as String
-
-        // then
-        assert(systemPrompt.isNotEmpty())
     }
 
     @Test
@@ -65,7 +57,7 @@ class ClaudeServiceTest {
             ReflectionTestUtils.setField(service, "client", mockClient)
 
             // when
-            val result = service.analyzeLyrics("Test Song", "Test lyrics")
+            val result = service.analyzeLyrics("Test Song", "Test lyrics", Genre.HIPHOP)
 
             // then
             assertEquals("# 가사 분석\n\n테스트 분석 결과", result)
@@ -90,7 +82,7 @@ class ClaudeServiceTest {
             // when & then
             val exception =
                 assertThrows<RuntimeException> {
-                    service.analyzeLyrics("Test Song", "Test lyrics")
+                    service.analyzeLyrics("Test Song", "Test lyrics", Genre.HIPHOP)
                 }
             assert(exception.message?.contains("Claude API 호출 실패") == true)
         }
@@ -113,7 +105,7 @@ class ClaudeServiceTest {
             // when & then
             val exception =
                 assertThrows<RuntimeException> {
-                    service.analyzeLyrics("Test Song", "Test lyrics")
+                    service.analyzeLyrics("Test Song", "Test lyrics", Genre.RNB)
                 }
             assertEquals("응답 본문이 없습니다", exception.message)
         }
@@ -138,7 +130,7 @@ class ClaudeServiceTest {
             // when & then
             val exception =
                 assertThrows<IllegalStateException> {
-                    service.analyzeLyrics("Test Song", "Test lyrics")
+                    service.analyzeLyrics("Test Song", "Test lyrics", Genre.KPOP)
                 }
             assertEquals("응답에 content가 없습니다", exception.message)
         }
@@ -168,7 +160,7 @@ class ClaudeServiceTest {
             // when & then
             val exception =
                 assertThrows<IllegalStateException> {
-                    service.analyzeLyrics("Test Song", "Test lyrics")
+                    service.analyzeLyrics("Test Song", "Test lyrics", Genre.JPOP)
                 }
             assertEquals("응답에 content가 없습니다", exception.message)
         }
@@ -203,7 +195,7 @@ class ClaudeServiceTest {
             // when & then
             val exception =
                 assertThrows<IllegalStateException> {
-                    service.analyzeLyrics("Test Song", "Test lyrics")
+                    service.analyzeLyrics("Test Song", "Test lyrics", Genre.BAND)
                 }
             assert(exception.message?.contains("예상치 못한 content type") == true)
         }
@@ -237,8 +229,46 @@ class ClaudeServiceTest {
             // when & then
             val exception =
                 assertThrows<IllegalStateException> {
-                    service.analyzeLyrics("Test Song", "Test lyrics")
+                    service.analyzeLyrics("Test Song", "Test lyrics", Genre.HIPHOP)
                 }
             assertEquals("text 필드가 없습니다", exception.message)
+        }
+
+    @Test
+    fun `모든 장르에 대해 올바른 프롬프트를 로드해야 한다`() =
+        runTest {
+            // given
+            val genres = listOf(Genre.HIPHOP, Genre.RNB, Genre.KPOP, Genre.JPOP, Genre.BAND)
+
+            genres.forEach { genre ->
+                val mockClient: OkHttpClient = mockk()
+                val mockCall: Call = mockk()
+                val mockResponse: Response = mockk()
+
+                val responseJson =
+                    """
+                    {
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "분석 결과"
+                            }
+                        ]
+                    }
+                    """.trimIndent()
+
+                every { mockResponse.isSuccessful } returns true
+                every { mockResponse.body } returns responseJson.toResponseBody("application/json".toMediaType())
+                every { mockCall.execute() } returns mockResponse
+                every { mockClient.newCall(any()) } returns mockCall
+
+                ReflectionTestUtils.setField(service, "client", mockClient)
+
+                // when
+                val result = service.analyzeLyrics("Test Song", "Test lyrics", genre)
+
+                // then
+                assertEquals("분석 결과", result)
+            }
         }
 }

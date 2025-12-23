@@ -1,7 +1,10 @@
 package com.hipchapedia.infrastructure.db.models
 
+import com.hipchapedia.domain.entities.Genre
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
@@ -20,6 +23,7 @@ import java.time.LocalDateTime
     indexes = [
         Index(name = "idx_lyrics_hash", columnList = "lyrics_hash"),
         Index(name = "idx_created_at", columnList = "created_at"),
+        Index(name = "idx_genre", columnList = "genre"),
     ],
 )
 class LyricsEntity(
@@ -29,6 +33,9 @@ class LyricsEntity(
     val lyricsHash: String,
     @Column(name = "original_lyrics", nullable = false, columnDefinition = "TEXT")
     val originalLyrics: String,
+    @Enumerated(EnumType.STRING)
+    @Column(name = "genre", nullable = false, length = 20)
+    var genre: Genre,
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,

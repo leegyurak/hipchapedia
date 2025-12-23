@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 data class LyricsAnalysis(
     val title: String,
     val lyrics: String,
+    val genre: Genre,
     val analysisResult: String? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val id: Long? = null,

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.hipchapedia.application.dtos.LyricsAnalysisRequestDTO
 import com.hipchapedia.application.usecases.AnalyzeLyricsUseCase
 import com.hipchapedia.application.usecases.SearchLyricsUseCase
+import com.hipchapedia.domain.entities.Genre
 import com.hipchapedia.domain.entities.LyricsAnalysis
 import com.hipchapedia.domain.entities.LyricsSearchResult
 import com.ninjasquad.springmockk.MockkBean
@@ -37,6 +38,7 @@ class LyricsAnalysisControllerTest {
             LyricsAnalysisRequestDTO(
                 title = "Test Song",
                 lyrics = "Test lyrics content",
+                genre = Genre.HIPHOP,
             )
 
         val analysisResult = "# Analysis Result\n\nTest analysis"
@@ -44,11 +46,12 @@ class LyricsAnalysisControllerTest {
             LyricsAnalysis(
                 title = request.title,
                 lyrics = request.lyrics,
+                genre = request.genre,
                 analysisResult = analysisResult,
                 id = 1L,
             )
 
-        coEvery { analyzeLyricsUseCase.execute(request.title, request.lyrics) } returns entity
+        coEvery { analyzeLyricsUseCase.execute(request.title, request.lyrics, request.genre) } returns entity
 
         // when & then
         mockMvc
@@ -60,6 +63,7 @@ class LyricsAnalysisControllerTest {
                 content { contentType(MediaType.APPLICATION_JSON) }
                 jsonPath("$.title") { value("Test Song") }
                 jsonPath("$.lyrics") { value("Test lyrics content") }
+                jsonPath("$.genre") { value("HIPHOP") }
                 jsonPath("$.analysisResult") { value(analysisResult) }
             }
     }
@@ -71,6 +75,7 @@ class LyricsAnalysisControllerTest {
             mapOf(
                 "title" to "",
                 "lyrics" to "Test lyrics",
+                "genre" to "HIPHOP",
             )
 
         // when & then
@@ -90,6 +95,7 @@ class LyricsAnalysisControllerTest {
             mapOf(
                 "title" to "Test Song",
                 "lyrics" to "",
+                "genre" to "HIPHOP",
             )
 
         // when & then
@@ -100,6 +106,87 @@ class LyricsAnalysisControllerTest {
             }.andExpect {
                 status { isBadRequest() }
             }
+    }
+
+    @Test
+    fun `장르가 누락되면 에러를 반환해야 한다`() {
+        // given - genre 필드를 아예 보내지 않는 경우
+        val request =
+            """
+            {
+                "title": "Test Song",
+                "lyrics": "Test lyrics"
+            }
+            """.trimIndent()
+
+        // when & then
+        mockMvc
+            .post("/api/lyrics/analyze") {
+                contentType = MediaType.APPLICATION_JSON
+                content = request
+            }.andExpect {
+                status { isBadRequest() }
+            }
+    }
+
+    @Test
+    fun `유효하지 않은 장르면 400 에러를 반환해야 한다`() {
+        // given
+        val request =
+            """
+            {
+                "title": "Test Song",
+                "lyrics": "Test lyrics",
+                "genre": "INVALID_GENRE"
+            }
+            """.trimIndent()
+
+        // when & then
+        mockMvc
+            .post("/api/lyrics/analyze") {
+                contentType = MediaType.APPLICATION_JSON
+                content = request
+            }.andExpect {
+                status { isBadRequest() }
+            }
+    }
+
+    @Test
+    fun `모든 장르 타입에 대해 정상적으로 처리해야 한다`() {
+        // given
+        val genres = listOf("HIPHOP", "RNB", "KPOP", "JPOP", "BAND")
+
+        genres.forEach { genreStr ->
+            val request =
+                mapOf(
+                    "title" to "Test Song",
+                    "lyrics" to "Test lyrics",
+                    "genre" to genreStr,
+                )
+
+            val genre = Genre.valueOf(genreStr)
+            val analysisResult = "# Analysis Result"
+            val entity =
+                LyricsAnalysis(
+                    title = "Test Song",
+                    lyrics = "Test lyrics",
+                    genre = genre,
+                    analysisResult = analysisResult,
+                    id = 1L,
+                )
+
+            coEvery { analyzeLyricsUseCase.execute("Test Song", "Test lyrics", genre) } returns entity
+
+            // when & then
+            mockMvc
+                .post("/api/lyrics/analyze") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = objectMapper.writeValueAsString(request)
+                }.andExpect {
+                    status { isOk() }
+                    jsonPath("$.genre") { value(genreStr) }
+                }
+        }
     }
 
     @Test

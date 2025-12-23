@@ -17,6 +17,7 @@ object LyricsAnalysisMapper {
         LyricsAnalysisResponseDTO(
             title = entity.title,
             lyrics = entity.lyrics,
+            genre = entity.genre,
             analysisResult =
                 entity.analysisResult
                     ?: throw IllegalStateException("분석 결과가 없습니다."),

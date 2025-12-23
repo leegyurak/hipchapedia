@@ -40,7 +40,7 @@ class LyricsAnalysisController(
         @Valid @RequestBody request: LyricsAnalysisRequestDTO,
     ): ResponseEntity<LyricsAnalysisResponseDTO> =
         runBlocking {
-            val result = analyzeLyricsUseCase.execute(request.title, request.lyrics)
+            val result = analyzeLyricsUseCase.execute(request.title, request.lyrics, request.genre)
             val responseDTO = LyricsAnalysisMapper.toResponseDTO(result)
             ResponseEntity.status(HttpStatus.OK).body(responseDTO)
         }

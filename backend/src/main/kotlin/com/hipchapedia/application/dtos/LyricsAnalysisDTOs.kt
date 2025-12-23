@@ -1,6 +1,8 @@
 package com.hipchapedia.application.dtos
 
+import com.hipchapedia.domain.entities.Genre
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 
 /**
  * 가사 분석 요청 DTO
@@ -10,6 +12,8 @@ data class LyricsAnalysisRequestDTO(
     val title: String,
     @field:NotBlank(message = "가사는 필수입니다.")
     val lyrics: String,
+    @field:NotNull(message = "장르는 필수입니다.")
+    val genre: Genre,
 )
 
 /**
@@ -18,6 +22,7 @@ data class LyricsAnalysisRequestDTO(
 data class LyricsAnalysisResponseDTO(
     val title: String,
     val lyrics: String,
+    val genre: Genre,
     val analysisResult: String,
 )
 
