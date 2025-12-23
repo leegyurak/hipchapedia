@@ -57,8 +57,8 @@ export default function AnalyzePage() {
                 <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
                   가사 분석
                 </h1>
-                <p className="text-[#9f9f9f] text-base md:text-lg">
-                  아티스트명과 곡 제목을 입력하면 가사를 검색하여 AI가 분석해드립니다
+                <p className="text-[#9f9f9f] text-sm sm:text-base md:text-lg max-w-3xl mx-auto px-4 break-keep leading-relaxed">
+                  Genius 연동을 통해 가사를 검색하여 AI가 분석해드립니다
                 </p>
               </div>
 
@@ -78,6 +78,7 @@ export default function AnalyzePage() {
                     searchResult={searchResult}
                     onConfirm={handleConfirm}
                     onCancel={handleCancel}
+                    isAnalyzing={isAnalyzing}
                   />
 
                   {isAnalyzing && (
