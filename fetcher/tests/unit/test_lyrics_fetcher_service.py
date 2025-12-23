@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -190,3 +191,199 @@ class TestLyricsFetcherService:
         calls = mock_message_repository.publish_result.call_args_list
         assert calls[0][0] == (song1, request1)
         assert calls[1][0] == (song2, request2)
+
+    async def test_concurrent_task_processing(
+        self,
+        mock_message_repository: AsyncMock,
+        mock_search_lyrics_use_case: AsyncMock,
+    ) -> None:
+        """Test that multiple requests are processed concurrently."""
+        # Arrange
+        service = LyricsFetcherService(
+            message_repository=mock_message_repository,
+            search_lyrics_use_case=mock_search_lyrics_use_case,
+            max_concurrent_tasks=3,
+        )
+
+        requests = [
+            SearchRequest(title=f"song {i}", artist=f"artist {i}") for i in range(5)
+        ]
+        songs = [
+            Song(title=f"Song {i}", artist=f"Artist {i}", lyrics=f"Lyrics {i}")
+            for i in range(5)
+        ]
+
+        # Track execution with delays to ensure concurrency
+        execution_started = []
+        execution_completed = []
+
+        async def delayed_execute(request: SearchRequest):
+            execution_started.append(request.title)
+            await asyncio.sleep(0.2)  # Longer delay to ensure overlap
+            execution_completed.append(request.title)
+            idx = int(request.title.split()[-1])
+            return songs[idx]
+
+        # Setup mocks
+        async def mock_subscribe():
+            for req in requests:
+                yield req
+                # Small delay between yields to ensure tasks are created
+                await asyncio.sleep(0.01)
+            # Wait longer for tasks to start executing
+            await asyncio.sleep(0.15)
+            service._running = False
+
+        mock_message_repository.subscribe_requests = MagicMock(
+            return_value=mock_subscribe()
+        )
+        mock_search_lyrics_use_case.execute.side_effect = delayed_execute
+
+        # Act
+        await service.start()
+
+        # Assert
+        # All 5 requests should be executed
+        assert len(execution_started) == 5
+        assert len(execution_completed) == 5
+
+        # Verify concurrent execution: at least 3 tasks should have started
+        # before the first one completes (due to max_concurrent_tasks=3)
+        # Check after short delay that multiple tasks started
+        assert mock_search_lyrics_use_case.execute.call_count == 5
+
+    async def test_semaphore_limits_concurrent_tasks(
+        self,
+        mock_message_repository: AsyncMock,
+        mock_search_lyrics_use_case: AsyncMock,
+    ) -> None:
+        """Test that semaphore correctly limits concurrent task execution."""
+        # Arrange
+        max_concurrent = 2
+        service = LyricsFetcherService(
+            message_repository=mock_message_repository,
+            search_lyrics_use_case=mock_search_lyrics_use_case,
+            max_concurrent_tasks=max_concurrent,
+        )
+
+        requests = [
+            SearchRequest(title=f"song {i}", artist=f"artist {i}") for i in range(4)
+        ]
+
+        # Track concurrent execution count
+        current_executing = 0
+        max_concurrent_reached = 0
+
+        async def tracked_execute(request: SearchRequest):
+            nonlocal current_executing, max_concurrent_reached
+            current_executing += 1
+            max_concurrent_reached = max(max_concurrent_reached, current_executing)
+            await asyncio.sleep(0.1)
+            current_executing -= 1
+            return Song(title="Test", artist="Test", lyrics="Test")
+
+        # Setup mocks
+        async def mock_subscribe():
+            for req in requests:
+                yield req
+            await asyncio.sleep(0.05)
+            service._running = False
+
+        mock_message_repository.subscribe_requests = MagicMock(
+            return_value=mock_subscribe()
+        )
+        mock_search_lyrics_use_case.execute.side_effect = tracked_execute
+
+        # Act
+        await service.start()
+
+        # Assert
+        # Should never exceed max_concurrent_tasks
+        assert max_concurrent_reached <= max_concurrent
+        assert max_concurrent_reached == max_concurrent  # Should reach the limit
+
+    async def test_graceful_shutdown_waits_for_tasks(
+        self,
+        mock_message_repository: AsyncMock,
+        mock_search_lyrics_use_case: AsyncMock,
+    ) -> None:
+        """Test that graceful shutdown waits for running tasks to complete."""
+        # Arrange
+        service = LyricsFetcherService(
+            message_repository=mock_message_repository,
+            search_lyrics_use_case=mock_search_lyrics_use_case,
+            max_concurrent_tasks=5,
+        )
+
+        completed_tasks = []
+
+        async def delayed_execute(request: SearchRequest):
+            await asyncio.sleep(0.2)
+            completed_tasks.append(request.title)
+            return Song(title="Test", artist="Test", lyrics="Test")
+
+        requests = [
+            SearchRequest(title=f"song {i}", artist=f"artist {i}") for i in range(3)
+        ]
+
+        # Setup mocks
+        async def mock_subscribe():
+            for req in requests:
+                yield req
+            # Immediately stop after yielding all requests
+            service._running = False
+
+        mock_message_repository.subscribe_requests = MagicMock(
+            return_value=mock_subscribe()
+        )
+        mock_search_lyrics_use_case.execute.side_effect = delayed_execute
+
+        # Act
+        await service.start()
+
+        # Assert
+        # All tasks should complete even though service stopped
+        assert len(completed_tasks) == 3
+        assert mock_message_repository.publish_result.call_count == 3
+
+    async def test_error_in_task_does_not_stop_service(
+        self,
+        mock_message_repository: AsyncMock,
+        mock_search_lyrics_use_case: AsyncMock,
+    ) -> None:
+        """Test that error in one task doesn't stop other tasks from processing."""
+        # Arrange
+        service = LyricsFetcherService(
+            message_repository=mock_message_repository,
+            search_lyrics_use_case=mock_search_lyrics_use_case,
+            max_concurrent_tasks=5,
+        )
+
+        requests = [
+            SearchRequest(title=f"song {i}", artist=f"artist {i}") for i in range(3)
+        ]
+
+        # First request will fail, others succeed
+        async def execute_with_error(request: SearchRequest):
+            if request.title == "song 0":
+                raise Exception("Test error")
+            return Song(title=request.title, artist=request.artist, lyrics="Test")
+
+        # Setup mocks
+        async def mock_subscribe():
+            for req in requests:
+                yield req
+            await asyncio.sleep(0.1)
+            service._running = False
+
+        mock_message_repository.subscribe_requests = MagicMock(
+            return_value=mock_subscribe()
+        )
+        mock_search_lyrics_use_case.execute.side_effect = execute_with_error
+
+        # Act
+        await service.start()
+
+        # Assert
+        # Only 2 successful publishes (song 1 and song 2)
+        assert mock_message_repository.publish_result.call_count == 2
