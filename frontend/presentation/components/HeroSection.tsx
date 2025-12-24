@@ -1,21 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import toast from 'react-hot-toast';
 
 export default function HeroSection() {
-  const handleGalleryClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    toast('개발중입니다!', {
-      icon: '🚧',
-      style: {
-        background: '#141414',
-        color: '#fff',
-        border: '1px solid #ff2e2e',
-      },
-      duration: 3000,
-    });
-  };
 
   return (
     <section className="w-full px-3 sm:px-4">
@@ -40,12 +27,12 @@ export default function HeroSection() {
             >
               가사 분석하기
             </Link>
-            <button
-              onClick={handleGalleryClick}
+            <Link
+              href="/gallery"
               className="w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 rounded-lg border border-[#1f1f1f] text-[#888888] font-bold text-sm sm:text-base hover:border-[#ff2e2e] hover:text-white transition-all"
             >
               분석 둘러보기
-            </button>
+            </Link>
           </div>
         </div>
 

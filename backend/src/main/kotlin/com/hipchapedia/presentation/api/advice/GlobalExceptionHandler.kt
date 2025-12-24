@@ -9,6 +9,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 
 /**
  * 글로벌 예외 처리기
@@ -56,6 +57,21 @@ class GlobalExceptionHandler {
                 else -> "요청 본문을 읽을 수 없습니다. JSON 형식을 확인해주세요."
             }
 
+        val errorResponse = ErrorResponse(message = message)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
+    }
+
+    /**
+     * Query parameter 타입 불일치 에러 처리
+     * (예: enum 변환 실패, 숫자 형식 오류 등)
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleMethodArgumentTypeMismatch(ex: MethodArgumentTypeMismatchException): ResponseEntity<ErrorResponse> {
+        val paramName = ex.name
+        val requiredType = ex.requiredType?.simpleName ?: "unknown"
+        val value = ex.value
+
+        val message = "파라미터 '$paramName'의 값 '$value'을(를) $requiredType 타입으로 변환할 수 없습니다."
         val errorResponse = ErrorResponse(message = message)
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse)
     }

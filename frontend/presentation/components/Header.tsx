@@ -2,25 +2,10 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import toast, { Toaster } from 'react-hot-toast';
 
 export default function Header() {
-  const handleGalleryClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    toast('개발중입니다!', {
-      icon: '🚧',
-      style: {
-        background: '#141414',
-        color: '#fff',
-        border: '1px solid #ff2e2e',
-      },
-      duration: 3000,
-    });
-  };
-
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-[#0a0a0a]/95 border-b border-[#1f1f1f]">
-      <Toaster position="top-center" />
       <div className="container mx-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center group">
@@ -41,12 +26,12 @@ export default function Header() {
             >
               가사 분석
             </Link>
-            <button
-              onClick={handleGalleryClick}
+            <Link
+              href="/gallery"
               className="text-sm sm:text-base font-bold text-[#888888] hover:text-white transition-colors whitespace-nowrap"
             >
               갤러리
-            </button>
+            </Link>
           </nav>
         </div>
       </div>

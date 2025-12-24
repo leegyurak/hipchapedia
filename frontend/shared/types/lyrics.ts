@@ -26,3 +26,17 @@ export interface LyricsSearchResponse {
   album: string | null;
   releaseDate: string | null;
 }
+
+export interface LyricsItem {
+  id: number;
+  title: string;
+  artist: string | null;
+  genre: Genre;
+  lyrics: string;
+}
+
+export interface LyricsListResponse {
+  lyrics: LyricsItem[];
+  nextCursor: number | null;
+  hasMore: boolean;
+}

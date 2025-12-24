@@ -1,11 +1,14 @@
 package com.hipchapedia.infrastructure.db.repositories
 
 import com.hipchapedia.domain.entities.Genre
+import com.hipchapedia.domain.interfaces.LyricsData
 import com.hipchapedia.domain.interfaces.LyricsRepositoryInterface
+import com.hipchapedia.domain.interfaces.LyricsWithAnalysis
 import com.hipchapedia.infrastructure.db.models.LyricsAnalysisResultEntity
 import com.hipchapedia.infrastructure.db.models.LyricsEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Repository
 
 /**
@@ -79,4 +82,46 @@ class LyricsRepositoryImpl(
             }
         }
     }
+
+    override suspend fun getLyricsList(
+        cursor: Long?,
+        limit: Int,
+        genre: Genre?,
+        artist: String?,
+    ): List<LyricsData> =
+        withContext(Dispatchers.IO) {
+            val pageable = PageRequest.of(0, limit)
+            val entities =
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = cursor,
+                    genre = genre,
+                    artist = artist,
+                    pageable = pageable,
+                )
+
+            entities.map { entity ->
+                LyricsData(
+                    id = entity.id!!,
+                    title = entity.title,
+                    artist = entity.artist,
+                    genre = entity.genre,
+                    lyrics = entity.originalLyrics,
+                )
+            }
+        }
+
+    override suspend fun getLyricsById(id: Long): LyricsWithAnalysis? =
+        withContext(Dispatchers.IO) {
+            val lyricsEntity = lyricsJpaRepository.findById(id).orElse(null) ?: return@withContext null
+            val analysisResultEntity =
+                lyricsAnalysisResultJpaRepository.findById(id).orElse(null)
+                    ?: return@withContext null
+
+            LyricsWithAnalysis(
+                title = lyricsEntity.title,
+                lyrics = lyricsEntity.originalLyrics,
+                genre = lyricsEntity.genre,
+                analysisResult = analysisResultEntity.analysisResult,
+            )
+        }
 }

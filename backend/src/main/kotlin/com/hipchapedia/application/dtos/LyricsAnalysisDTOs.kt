@@ -38,3 +38,23 @@ data class LyricsSearchResponseDTO(
     val album: String?,
     val releaseDate: String?,
 )
+
+/**
+ * 가사 목록 조회 응답 DTO
+ */
+data class LyricsListResponseDTO(
+    val lyrics: List<LyricsItemDTO>,
+    val nextCursor: Long?,
+    val hasMore: Boolean,
+)
+
+/**
+ * 가사 아이템 DTO
+ */
+data class LyricsItemDTO(
+    val id: Long,
+    val title: String,
+    val artist: String?,
+    val genre: Genre,
+    val lyrics: String,
+)

@@ -9,10 +9,12 @@ import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.springframework.data.domain.PageRequest
 import java.util.Optional
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class LyricsRepositoryImplTest {
     private val lyricsJpaRepository: LyricsJpaRepository = mockk()
@@ -83,7 +85,7 @@ class LyricsRepositoryImplTest {
         }
 
     @Test
-    fun `분석 결과가 없으면 null을 반환해야 한다`() =
+    fun `ID로 분석 결과를 조회했을 때 없으면 null을 반환해야 한다`() =
         runTest {
             // given
             val lyricsId = 999L
@@ -323,5 +325,396 @@ class LyricsRepositoryImplTest {
 
             // then
             verify { lyricsAnalysisResultJpaRepository.save(any<LyricsAnalysisResultEntity>()) }
+        }
+
+    @Test
+    fun `가사 목록을 조회할 수 있어야 한다`() =
+        runTest {
+            // given
+            val limit = 10
+            val entities =
+                listOf(
+                    LyricsEntity(
+                        id = 3L,
+                        title = "Song 3",
+                        lyricsHash = "hash3",
+                        originalLyrics = "lyrics 3",
+                        genre = Genre.HIPHOP,
+                        artist = "Artist 3",
+                    ),
+                    LyricsEntity(
+                        id = 2L,
+                        title = "Song 2",
+                        lyricsHash = "hash2",
+                        originalLyrics = "lyrics 2",
+                        genre = Genre.RNB,
+                        artist = "Artist 2",
+                    ),
+                )
+
+            every {
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = null,
+                    genre = null,
+                    artist = null,
+                    pageable = PageRequest.of(0, limit),
+                )
+            } returns entities
+
+            // when
+            val result = repository.getLyricsList(null, limit, null, null)
+
+            // then
+            assertEquals(2, result.size)
+            assertEquals(3L, result[0].id)
+            assertEquals("Song 3", result[0].title)
+            assertEquals("Artist 3", result[0].artist)
+            assertEquals(Genre.HIPHOP, result[0].genre)
+            assertEquals("lyrics 3", result[0].lyrics)
+        }
+
+    @Test
+    fun `artist가 null인 가사는 조회 결과에 포함되지 않아야 한다`() =
+        runTest {
+            // given
+            val limit = 10
+            val entities =
+                listOf(
+                    LyricsEntity(
+                        id = 3L,
+                        title = "Song 3",
+                        lyricsHash = "hash3",
+                        originalLyrics = "lyrics 3",
+                        genre = Genre.HIPHOP,
+                        artist = "Artist 3",
+                    ),
+                    LyricsEntity(
+                        id = 2L,
+                        title = "Song 2",
+                        lyricsHash = "hash2",
+                        originalLyrics = "lyrics 2",
+                        genre = Genre.RNB,
+                        artist = "Artist 2",
+                    ),
+                )
+
+            every {
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = null,
+                    genre = null,
+                    artist = null,
+                    pageable = PageRequest.of(0, limit),
+                )
+            } returns entities
+
+            // when
+            val result = repository.getLyricsList(null, limit, null, null)
+
+            // then
+            assertEquals(2, result.size)
+            assertTrue(result.all { it.artist != null })
+        }
+
+    @Test
+    fun `가사 목록을 cursor로 조회할 수 있어야 한다`() =
+        runTest {
+            // given
+            val cursor = 5L
+            val limit = 10
+            val entities =
+                listOf(
+                    LyricsEntity(
+                        id = 4L,
+                        title = "Song 4",
+                        lyricsHash = "hash4",
+                        originalLyrics = "lyrics 4",
+                        genre = Genre.HIPHOP,
+                    ),
+                    LyricsEntity(
+                        id = 3L,
+                        title = "Song 3",
+                        lyricsHash = "hash3",
+                        originalLyrics = "lyrics 3",
+                        genre = Genre.HIPHOP,
+                    ),
+                )
+
+            every {
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = cursor,
+                    genre = null,
+                    artist = null,
+                    pageable = PageRequest.of(0, limit),
+                )
+            } returns entities
+
+            // when
+            val result = repository.getLyricsList(cursor, limit, null, null)
+
+            // then
+            assertEquals(2, result.size)
+            assertEquals(4L, result[0].id)
+            assertEquals(3L, result[1].id)
+        }
+
+    @Test
+    fun `가사 목록을 genre로 필터링할 수 있어야 한다`() =
+        runTest {
+            // given
+            val genre = Genre.HIPHOP
+            val limit = 10
+            val entities =
+                listOf(
+                    LyricsEntity(
+                        id = 3L,
+                        title = "Hip Hop Song 3",
+                        lyricsHash = "hash3",
+                        originalLyrics = "lyrics 3",
+                        genre = Genre.HIPHOP,
+                    ),
+                    LyricsEntity(
+                        id = 1L,
+                        title = "Hip Hop Song 1",
+                        lyricsHash = "hash1",
+                        originalLyrics = "lyrics 1",
+                        genre = Genre.HIPHOP,
+                    ),
+                )
+
+            every {
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = null,
+                    genre = genre,
+                    artist = null,
+                    pageable = PageRequest.of(0, limit),
+                )
+            } returns entities
+
+            // when
+            val result = repository.getLyricsList(null, limit, genre, null)
+
+            // then
+            assertEquals(2, result.size)
+            assertTrue(result.all { it.genre == Genre.HIPHOP })
+        }
+
+    @Test
+    fun `가사 목록을 artist로 필터링할 수 있어야 한다`() =
+        runTest {
+            // given
+            val artist = "Drake"
+            val limit = 10
+            val entities =
+                listOf(
+                    LyricsEntity(
+                        id = 2L,
+                        title = "Drake Song 2",
+                        lyricsHash = "hash2",
+                        originalLyrics = "lyrics 2",
+                        genre = Genre.HIPHOP,
+                        artist = "Drake",
+                    ),
+                    LyricsEntity(
+                        id = 1L,
+                        title = "Drake Song 1",
+                        lyricsHash = "hash1",
+                        originalLyrics = "lyrics 1",
+                        genre = Genre.RNB,
+                        artist = "Drake",
+                    ),
+                )
+
+            every {
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = null,
+                    genre = null,
+                    artist = artist,
+                    pageable = PageRequest.of(0, limit),
+                )
+            } returns entities
+
+            // when
+            val result = repository.getLyricsList(null, limit, null, artist)
+
+            // then
+            assertEquals(2, result.size)
+            assertTrue(result.all { it.artist == "Drake" })
+        }
+
+    @Test
+    fun `가사 목록을 artist 부분 일치로 검색할 수 있어야 한다`() =
+        runTest {
+            // given
+            val artist = "Dra"
+            val limit = 10
+            val entities =
+                listOf(
+                    LyricsEntity(
+                        id = 3L,
+                        title = "Drake Song",
+                        lyricsHash = "hash3",
+                        originalLyrics = "lyrics 3",
+                        genre = Genre.HIPHOP,
+                        artist = "Drake",
+                    ),
+                    LyricsEntity(
+                        id = 2L,
+                        title = "Drama Song",
+                        lyricsHash = "hash2",
+                        originalLyrics = "lyrics 2",
+                        genre = Genre.RNB,
+                        artist = "Drama",
+                    ),
+                )
+
+            every {
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = null,
+                    genre = null,
+                    artist = artist,
+                    pageable = PageRequest.of(0, limit),
+                )
+            } returns entities
+
+            // when
+            val result = repository.getLyricsList(null, limit, null, artist)
+
+            // then
+            assertEquals(2, result.size)
+            assertTrue(result.all { it.artist?.contains("Dra") == true })
+        }
+
+    @Test
+    fun `가사 목록을 genre와 artist 모두로 필터링할 수 있어야 한다`() =
+        runTest {
+            // given
+            val genre = Genre.HIPHOP
+            val artist = "Drake"
+            val limit = 10
+            val entities =
+                listOf(
+                    LyricsEntity(
+                        id = 1L,
+                        title = "Drake Hip Hop Song",
+                        lyricsHash = "hash1",
+                        originalLyrics = "lyrics 1",
+                        genre = Genre.HIPHOP,
+                        artist = "Drake",
+                    ),
+                )
+
+            every {
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = null,
+                    genre = genre,
+                    artist = artist,
+                    pageable = PageRequest.of(0, limit),
+                )
+            } returns entities
+
+            // when
+            val result = repository.getLyricsList(null, limit, genre, artist)
+
+            // then
+            assertEquals(1, result.size)
+            assertEquals(Genre.HIPHOP, result[0].genre)
+            assertEquals("Drake", result[0].artist)
+        }
+
+    @Test
+    fun `가사가 없으면 빈 리스트를 반환해야 한다`() =
+        runTest {
+            // given
+            val limit = 10
+
+            every {
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = null,
+                    genre = null,
+                    artist = null,
+                    pageable = PageRequest.of(0, limit),
+                )
+            } returns emptyList()
+
+            // when
+            val result = repository.getLyricsList(null, limit, null, null)
+
+            // then
+            assertTrue(result.isEmpty())
+        }
+
+    @Test
+    fun `ID로 가사와 분석 결과를 조회할 수 있어야 한다`() =
+        runTest {
+            // given
+            val lyricsId = 1L
+            val lyricsEntity =
+                LyricsEntity(
+                    id = lyricsId,
+                    title = "Test Song",
+                    lyricsHash = "hash",
+                    originalLyrics = "Test lyrics content",
+                    genre = Genre.HIPHOP,
+                    artist = "Test Artist",
+                )
+
+            val analysisResultEntity =
+                LyricsAnalysisResultEntity(
+                    lyricsId = lyricsId,
+                    analysisResult = "# Analysis Result",
+                )
+
+            every { lyricsJpaRepository.findById(lyricsId) } returns Optional.of(lyricsEntity)
+            every { lyricsAnalysisResultJpaRepository.findById(lyricsId) } returns Optional.of(analysisResultEntity)
+
+            // when
+            val result = repository.getLyricsById(lyricsId)
+
+            // then
+            assertNotNull(result)
+            assertEquals("Test Song", result.title)
+            assertEquals("Test lyrics content", result.lyrics)
+            assertEquals(Genre.HIPHOP, result.genre)
+            assertEquals("# Analysis Result", result.analysisResult)
+        }
+
+    @Test
+    fun `가사가 없으면 null을 반환해야 한다`() =
+        runTest {
+            // given
+            val lyricsId = 999L
+
+            every { lyricsJpaRepository.findById(lyricsId) } returns Optional.empty()
+
+            // when
+            val result = repository.getLyricsById(lyricsId)
+
+            // then
+            assertNull(result)
+        }
+
+    @Test
+    fun `가사는 있지만 분석 결과가 없으면 null을 반환해야 한다`() =
+        runTest {
+            // given
+            val lyricsId = 1L
+            val lyricsEntity =
+                LyricsEntity(
+                    id = lyricsId,
+                    title = "Test Song",
+                    lyricsHash = "hash",
+                    originalLyrics = "Test lyrics content",
+                    genre = Genre.HIPHOP,
+                    artist = "Test Artist",
+                )
+
+            every { lyricsJpaRepository.findById(lyricsId) } returns Optional.of(lyricsEntity)
+            every { lyricsAnalysisResultJpaRepository.findById(lyricsId) } returns Optional.empty()
+
+            // when
+            val result = repository.getLyricsById(lyricsId)
+
+            // then
+            assertNull(result)
         }
 }

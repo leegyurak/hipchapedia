@@ -1,5 +1,5 @@
 import { ILyricsRepository } from '@/core/interfaces/ILyricsRepository';
-import { LyricsAnalysisRequest, LyricsAnalysisResponse, LyricsSearchRequest, LyricsSearchResponse } from '@/shared/types/lyrics';
+import { LyricsAnalysisRequest, LyricsAnalysisResponse, LyricsSearchRequest, LyricsSearchResponse, LyricsListResponse, Genre } from '@/shared/types/lyrics';
 
 export class LyricsApiRepository implements ILyricsRepository {
   private baseUrl: string;
@@ -32,11 +32,14 @@ export class LyricsApiRepository implements ILyricsRepository {
     }
   }
 
-  async getAnalysis(id: string): Promise<LyricsAnalysisResponse> {
+  async getAnalysis(id: number): Promise<LyricsAnalysisResponse> {
     try {
       const response = await fetch(`${this.baseUrl}/api/lyrics/${id}`);
 
       if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('분석 결과를 찾을 수 없습니다.');
+        }
         throw new Error(`분석 결과를 가져오는데 실패했습니다: ${response.statusText}`);
       }
 
@@ -49,9 +52,15 @@ export class LyricsApiRepository implements ILyricsRepository {
     }
   }
 
-  async listAnalyses(): Promise<LyricsAnalysisResponse[]> {
+  async listAnalyses(cursor?: number, limit: number = 20, genre?: Genre, artist?: string): Promise<LyricsListResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/lyrics`);
+      const params = new URLSearchParams();
+      if (cursor !== undefined) params.set('cursor', cursor.toString());
+      params.set('limit', limit.toString());
+      if (genre) params.set('genre', genre);
+      if (artist) params.set('artist', artist);
+
+      const response = await fetch(`${this.baseUrl}/api/lyrics?${params}`);
 
       if (!response.ok) {
         throw new Error(`목록을 가져오는데 실패했습니다: ${response.statusText}`);
