@@ -26,6 +26,7 @@ interface LyricsJpaRepository : JpaRepository<LyricsEntity, Long> {
      * cursor가 null이면 처음부터 조회하고, 있으면 해당 ID보다 작은 ID를 조회합니다.
      * artist는 LIKE 연산으로 부분 일치 검색을 수행합니다.
      * artist가 null인 레코드는 결과에서 제외됩니다.
+     * 분석 결과가 있는 가사만 조회합니다.
      *
      * @param cursor 마지막 가사 ID
      * @param genre 필터링할 장르
@@ -37,6 +38,7 @@ interface LyricsJpaRepository : JpaRepository<LyricsEntity, Long> {
         """
         SELECT l FROM LyricsEntity l
         WHERE l.artist IS NOT NULL
+        AND EXISTS (SELECT 1 FROM LyricsAnalysisResultEntity a WHERE a.lyricsId = l.id)
         AND (:cursor IS NULL OR l.id < :cursor)
         AND (:genre IS NULL OR l.genre = :genre)
         AND (:artist IS NULL OR l.artist LIKE %:artist%)

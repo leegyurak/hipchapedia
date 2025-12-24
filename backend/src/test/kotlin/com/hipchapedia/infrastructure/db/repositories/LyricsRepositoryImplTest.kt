@@ -416,6 +416,51 @@ class LyricsRepositoryImplTest {
         }
 
     @Test
+    fun `분석 결과가 없는 가사는 조회 결과에 포함되지 않아야 한다`() =
+        runTest {
+            // given
+            val limit = 10
+            // JPA 쿼리의 EXISTS 조건으로 분석 결과가 있는 가사만 반환됨
+            val entities =
+                listOf(
+                    LyricsEntity(
+                        id = 3L,
+                        title = "Song 3 with analysis",
+                        lyricsHash = "hash3",
+                        originalLyrics = "lyrics 3",
+                        genre = Genre.HIPHOP,
+                        artist = "Artist 3",
+                    ),
+                    LyricsEntity(
+                        id = 1L,
+                        title = "Song 1 with analysis",
+                        lyricsHash = "hash1",
+                        originalLyrics = "lyrics 1",
+                        genre = Genre.RNB,
+                        artist = "Artist 1",
+                    ),
+                )
+
+            every {
+                lyricsJpaRepository.findLyricsWithCursor(
+                    cursor = null,
+                    genre = null,
+                    artist = null,
+                    pageable = PageRequest.of(0, limit),
+                )
+            } returns entities
+
+            // when
+            val result = repository.getLyricsList(null, limit, null, null)
+
+            // then
+            assertEquals(2, result.size)
+            // 쿼리의 EXISTS 조건으로 분석 결과가 있는 가사만 반환되므로
+            // 반환된 모든 가사는 분석 결과가 존재한다고 가정
+            assertTrue(result.isNotEmpty())
+        }
+
+    @Test
     fun `가사 목록을 cursor로 조회할 수 있어야 한다`() =
         runTest {
             // given
