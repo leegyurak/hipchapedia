@@ -105,6 +105,7 @@ class LyricsRepositoryImplTest {
             val lyricsHash = "test-hash"
             val originalLyrics = "Test lyrics content"
             val genre = Genre.HIPHOP
+            val artist = "Test Artist"
 
             val savedEntity =
                 LyricsEntity(
@@ -113,12 +114,13 @@ class LyricsRepositoryImplTest {
                     lyricsHash = lyricsHash,
                     originalLyrics = originalLyrics,
                     genre = genre,
+                    artist = artist,
                 )
 
             every { lyricsJpaRepository.save(any<LyricsEntity>()) } returns savedEntity
 
             // when
-            val result = repository.save(title, lyricsHash, originalLyrics, genre)
+            val result = repository.save(title, lyricsHash, originalLyrics, genre, artist)
 
             // then
             assertEquals(1L, result)
@@ -148,11 +150,70 @@ class LyricsRepositoryImplTest {
                 every { lyricsJpaRepository.save(any<LyricsEntity>()) } returns savedEntity
 
                 // when
-                val result = repository.save(title, lyricsHash, originalLyrics, genre)
+                val result = repository.save(title, lyricsHash, originalLyrics, genre, null)
 
                 // then
                 assertEquals(1L, result)
             }
+        }
+
+    @Test
+    fun `artist 정보와 함께 가사를 저장할 수 있어야 한다`() =
+        runTest {
+            // given
+            val title = "Test Song"
+            val lyricsHash = "test-hash"
+            val originalLyrics = "Test lyrics content"
+            val genre = Genre.HIPHOP
+            val artist = "Drake"
+
+            val savedEntity =
+                LyricsEntity(
+                    id = 1L,
+                    title = title,
+                    lyricsHash = lyricsHash,
+                    originalLyrics = originalLyrics,
+                    genre = genre,
+                    artist = artist,
+                )
+
+            every { lyricsJpaRepository.save(any<LyricsEntity>()) } returns savedEntity
+
+            // when
+            val result = repository.save(title, lyricsHash, originalLyrics, genre, artist)
+
+            // then
+            assertEquals(1L, result)
+            verify { lyricsJpaRepository.save(match { it.artist == artist }) }
+        }
+
+    @Test
+    fun `artist 없이도 가사를 저장할 수 있어야 한다`() =
+        runTest {
+            // given
+            val title = "Test Song"
+            val lyricsHash = "test-hash"
+            val originalLyrics = "Test lyrics content"
+            val genre = Genre.HIPHOP
+
+            val savedEntity =
+                LyricsEntity(
+                    id = 1L,
+                    title = title,
+                    lyricsHash = lyricsHash,
+                    originalLyrics = originalLyrics,
+                    genre = genre,
+                    artist = null,
+                )
+
+            every { lyricsJpaRepository.save(any<LyricsEntity>()) } returns savedEntity
+
+            // when
+            val result = repository.save(title, lyricsHash, originalLyrics, genre, null)
+
+            // then
+            assertEquals(1L, result)
+            verify { lyricsJpaRepository.save(match { it.artist == null }) }
         }
 
     @Test

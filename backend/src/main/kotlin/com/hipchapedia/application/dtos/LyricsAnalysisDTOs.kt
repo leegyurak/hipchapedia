@@ -14,6 +14,7 @@ data class LyricsAnalysisRequestDTO(
     val lyrics: String,
     @field:NotNull(message = "장르는 필수입니다.")
     val genre: Genre,
+    val artist: String? = null,
 )
 
 /**

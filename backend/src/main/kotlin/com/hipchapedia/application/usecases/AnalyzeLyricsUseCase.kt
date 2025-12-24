@@ -22,12 +22,14 @@ class AnalyzeLyricsUseCase(
      * @param title 곡 제목
      * @param lyrics 가사 내용
      * @param genre 장르
+     * @param artist 아티스트명 (nullable)
      * @return 분석 결과가 포함된 LyricsAnalysis 엔티티
      */
     suspend fun execute(
         title: String,
         lyrics: String,
         genre: com.hipchapedia.domain.entities.Genre,
+        artist: String? = null,
     ): LyricsAnalysis {
         // 가사 해시 생성
         val lyricsHash = generateLyricsHash(lyrics)
@@ -56,7 +58,7 @@ class AnalyzeLyricsUseCase(
             lyricsId = id
         } else {
             // 가사가 없으면 새로 저장
-            lyricsId = lyricsRepository.save(title, lyricsHash, lyrics, genre)
+            lyricsId = lyricsRepository.save(title, lyricsHash, lyrics, genre, artist)
         }
 
         // 엔티티 생성

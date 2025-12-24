@@ -36,6 +36,7 @@ class LyricsRepositoryImpl(
         lyricsHash: String,
         originalLyrics: String,
         genre: Genre,
+        artist: String?,
     ): Long =
         withContext(Dispatchers.IO) {
             val entity =
@@ -44,6 +45,7 @@ class LyricsRepositoryImpl(
                     lyricsHash = lyricsHash,
                     originalLyrics = originalLyrics,
                     genre = genre,
+                    artist = artist,
                 )
             lyricsJpaRepository.save(entity).id!!
         }

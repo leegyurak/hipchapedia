@@ -23,15 +23,16 @@ class AnalyzeLyricsUseCaseTest {
             val title = "Test Song"
             val lyrics = "Test lyrics content"
             val genre = Genre.HIPHOP
+            val artist = "Test Artist"
             val analysisResult = "# Analysis Result\n\nTest analysis"
 
             coEvery { lyricsRepository.getByHash(any()) } returns null
-            coEvery { lyricsRepository.save(any(), any(), any(), any()) } returns 1L
+            coEvery { lyricsRepository.save(any(), any(), any(), any(), any()) } returns 1L
             coEvery { aiService.analyzeLyrics(title, lyrics, genre) } returns analysisResult
             coEvery { lyricsRepository.saveAnalysisResult(any(), any()) } returns Unit
 
             // when
-            val result = useCase.execute(title, lyrics, genre)
+            val result = useCase.execute(title, lyrics, genre, artist)
 
             // then
             assertNotNull(result)
@@ -40,7 +41,7 @@ class AnalyzeLyricsUseCaseTest {
             assertEquals(genre, result.genre)
             assertEquals(analysisResult, result.analysisResult)
 
-            coVerify { lyricsRepository.save(title, any(), lyrics, genre) }
+            coVerify { lyricsRepository.save(title, any(), lyrics, genre, artist) }
             coVerify { aiService.analyzeLyrics(title, lyrics, genre) }
             coVerify { lyricsRepository.saveAnalysisResult(1L, analysisResult) }
         }
@@ -96,7 +97,7 @@ class AnalyzeLyricsUseCaseTest {
 
             coVerify { aiService.analyzeLyrics(title, lyrics, genre) }
             coVerify { lyricsRepository.saveAnalysisResult(existingId, analysisResult) }
-            coVerify(exactly = 0) { lyricsRepository.save(any(), any(), any(), any()) }
+            coVerify(exactly = 0) { lyricsRepository.save(any(), any(), any(), any(), any()) }
         }
 
     @Test
@@ -111,7 +112,7 @@ class AnalyzeLyricsUseCaseTest {
                 val analysisResult = "# Analysis for $genre"
 
                 coEvery { lyricsRepository.getByHash(any()) } returns null
-                coEvery { lyricsRepository.save(any(), any(), any(), any()) } returns 1L
+                coEvery { lyricsRepository.save(any(), any(), any(), any(), any()) } returns 1L
                 coEvery { aiService.analyzeLyrics(title, lyrics, genre) } returns analysisResult
                 coEvery { lyricsRepository.saveAnalysisResult(any(), any()) } returns Unit
 
@@ -121,5 +122,50 @@ class AnalyzeLyricsUseCaseTest {
                 // then
                 assertEquals(genre, result.genre)
             }
+        }
+
+    @Test
+    fun `artist 정보와 함께 가사를 저장할 수 있어야 한다`() =
+        runTest {
+            // given
+            val title = "Test Song"
+            val lyrics = "Test lyrics content"
+            val genre = Genre.HIPHOP
+            val artist = "Test Artist"
+            val analysisResult = "# Analysis Result"
+
+            coEvery { lyricsRepository.getByHash(any()) } returns null
+            coEvery { lyricsRepository.save(any(), any(), any(), any(), any()) } returns 1L
+            coEvery { aiService.analyzeLyrics(title, lyrics, genre) } returns analysisResult
+            coEvery { lyricsRepository.saveAnalysisResult(any(), any()) } returns Unit
+
+            // when
+            val result = useCase.execute(title, lyrics, genre, artist)
+
+            // then
+            assertNotNull(result)
+            coVerify { lyricsRepository.save(title, any(), lyrics, genre, artist) }
+        }
+
+    @Test
+    fun `artist 없이도 가사를 저장할 수 있어야 한다`() =
+        runTest {
+            // given
+            val title = "Test Song"
+            val lyrics = "Test lyrics content"
+            val genre = Genre.HIPHOP
+            val analysisResult = "# Analysis Result"
+
+            coEvery { lyricsRepository.getByHash(any()) } returns null
+            coEvery { lyricsRepository.save(any(), any(), any(), any(), any()) } returns 1L
+            coEvery { aiService.analyzeLyrics(title, lyrics, genre) } returns analysisResult
+            coEvery { lyricsRepository.saveAnalysisResult(any(), any()) } returns Unit
+
+            // when
+            val result = useCase.execute(title, lyrics, genre)
+
+            // then
+            assertNotNull(result)
+            coVerify { lyricsRepository.save(title, any(), lyrics, genre, null) }
         }
 }

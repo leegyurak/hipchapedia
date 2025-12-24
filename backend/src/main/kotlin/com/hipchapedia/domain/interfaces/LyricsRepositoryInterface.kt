@@ -29,6 +29,7 @@ interface LyricsRepositoryInterface {
      * @param lyricsHash 가사 해시
      * @param originalLyrics 원본 가사 내용
      * @param genre 장르
+     * @param artist 아티스트명 (nullable)
      * @return 저장된 가사 ID
      */
     suspend fun save(
@@ -36,6 +37,7 @@ interface LyricsRepositoryInterface {
         lyricsHash: String,
         originalLyrics: String,
         genre: Genre,
+        artist: String? = null,
     ): Long
 
     /**

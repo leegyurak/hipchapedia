@@ -36,6 +36,8 @@ class LyricsEntity(
     @Enumerated(EnumType.STRING)
     @Column(name = "genre", nullable = false, length = 20)
     var genre: Genre,
+    @Column(name = "artist", nullable = true, length = 200)
+    var artist: String? = null,
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
