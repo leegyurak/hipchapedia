@@ -22,7 +22,15 @@ export default function AnalysisDetailPage() {
       try {
         setIsLoading(true);
         const repository = new LyricsApiRepository();
-        const result = await repository.getAnalysis(id);
+        const numericId = parseInt(id);
+
+        if (isNaN(numericId)) {
+          setError('Invalid ID');
+          setIsLoading(false);
+          return;
+        }
+
+        const result = await repository.getAnalysis(numericId);
         setAnalysis(result);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch analysis';
