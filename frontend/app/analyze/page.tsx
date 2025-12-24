@@ -32,6 +32,7 @@ export default function AnalyzePage() {
         title: searchResult.title,
         lyrics: searchResult.lyrics,
         genre: genre,
+        artist: searchResult.artist,
       });
     } catch (err) {
       console.error('Failed to analyze lyrics:', err);

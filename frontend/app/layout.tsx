@@ -16,7 +16,7 @@ const notoSansKr = Noto_Sans_KR({
 
 export const metadata: Metadata = {
   title: "힙챠피디아 - AI 힙합 가사 분석",
-  description: "AI가 힙합 가사를 분석해드립니다. 주제, 감정, 라임 스킴, 워드플레이까지 한눈에 확인하세요.",
+  description: "AI가 음악 가사를 분석해드립니다. 주제, 감정, 라임 스킴, 워드플레이까지 한눈에 확인하세요.",
 };
 
 export default function RootLayout({

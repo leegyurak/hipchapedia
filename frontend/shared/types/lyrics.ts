@@ -4,6 +4,7 @@ export interface LyricsAnalysisRequest {
   title: string;
   lyrics: string;
   genre?: Genre;
+  artist?: string;
 }
 
 export interface LyricsAnalysisResponse {
