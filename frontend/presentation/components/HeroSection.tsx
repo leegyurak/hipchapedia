@@ -30,7 +30,7 @@ export default function HeroSection() {
           <p className="text-base sm:text-lg md:text-xl text-[#888888] mb-8 sm:mb-10 max-w-2xl mx-auto px-4 break-keep font-medium">
             AI가 힙합 가사를 분석해드립니다
             <br />
-            라임, 플로우, 메시지까지 한눈에
+            힙합, R&B부터 K-POP까지 한눈에
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center px-4">

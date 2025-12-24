@@ -1,6 +1,9 @@
+export type Genre = 'HIPHOP' | 'RNB' | 'KPOP' | 'JPOP' | 'BAND';
+
 export interface LyricsAnalysisRequest {
   title: string;
   lyrics: string;
+  genre?: Genre;
 }
 
 export interface LyricsAnalysisResponse {
